@@ -1,0 +1,35 @@
+{
+  "name": "web",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint --max-warnings 0",
+    "check-types": "next typegen && tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/core": "*",
+    "@repo/database": "*",
+    "@repo/ui": "*",
+    "lucide-react": "^0.562.0",
+    "next": "16.1.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "*",
+    "@repo/typescript-config": "*",
+    "@tailwindcss/postcss": "^4.1.18",
+    "@types/node": "^22.15.3",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "autoprefixer": "^10.4.23",
+    "eslint": "^9.39.1",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^4.1.18",
+    "typescript": "5.9.2"
+  }
+}

@@ -1,0 +1,28 @@
+{
+    "name": "worker",
+    "version": "0.0.0",
+    "private": true,
+    "scripts": {
+        "dev": "tsx watch src/index.ts",
+        "build": "tsc",
+        "start": "node dist/index.js",
+        "lint": "eslint ."
+    },
+    "dependencies": {
+        "@repo/core": "*",
+        "@repo/database": "*",
+        "bullmq": "^5.4.1",
+        "dotenv": "^16.4.5",
+        "ioredis": "^5.3.2",
+        "ping": "^1.0.0"
+    },
+    "devDependencies": {
+        "@repo/eslint-config": "*",
+        "@repo/typescript-config": "*",
+        "@types/node": "^22.15.3",
+        "@types/ping": "^0.4.4",
+        "eslint": "^9.39.1",
+        "tsx": "^4.7.1",
+        "typescript": "5.9.2"
+    }
+}

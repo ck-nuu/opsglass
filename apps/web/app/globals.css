@@ -1,0 +1,312 @@
+@import "tailwindcss";
+
+/* =====================================================
+   OPSGLASS PREMIUM DESIGN SYSTEM
+   Inspired by Vercel/GitHub/Replit status pages
+   ===================================================== */
+
+/* 🎨 Color Palette */
+:root {
+  /* Base Dark Theme */
+  --background: 222 47% 5%;
+  --foreground: 210 40% 96%;
+  
+  /* Primary Accent - Electric Blue */
+  --primary: 217 91% 60%;
+  --primary-foreground: 222 47% 5%;
+  
+  /* Secondary/Muted */
+  --muted: 217 33% 12%;
+  --muted-foreground: 215 20% 55%;
+  
+  /* Cards */
+  --card: 222 47% 8%;
+  --card-foreground: 210 40% 96%;
+  
+  /* Borders */
+  --border: 217 33% 15%;
+  
+  /* Status Colors */
+  --status-operational: 142 76% 45%;
+  --status-degraded: 38 92% 50%;
+  --status-outage: 0 84% 60%;
+  --status-maintenance: 217 91% 60%;
+  
+  /* Glow Effects */
+  --glow-primary: rgba(59, 130, 246, 0.15);
+  --glow-operational: rgba(34, 197, 94, 0.12);
+  --glow-degraded: rgba(250, 176, 5, 0.12);
+  --glow-outage: rgba(239, 68, 68, 0.12);
+}
+
+/* 🌌 Background & Body */
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  min-height: 100vh;
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, var(--glow-primary), transparent),
+    radial-gradient(ellipse 60% 40% at 0% 0%, rgba(139, 92, 246, 0.08), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(59, 130, 246, 0.08), transparent);
+  background-attachment: fixed;
+}
+
+/* 🪟 Glassmorphism Cards */
+.glass-card {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.01) 100%
+  );
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 12px 48px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* 📊 Status Card Variants */
+.glass-card-status {
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card-status::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, hsl(var(--status-operational)), transparent);
+  opacity: 0.8;
+}
+
+/* 🎭 Glass Panel (Navigation) */
+.glass-panel {
+  background: linear-gradient(
+    180deg,
+    rgba(17, 24, 39, 0.8) 0%,
+    rgba(17, 24, 39, 0.6) 100%
+  );
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* 💡 Status Indicators */
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  position: relative;
+}
+
+.status-dot::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  opacity: 0.4;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.status-dot-operational {
+  background: hsl(var(--status-operational));
+}
+.status-dot-operational::after {
+  background: hsl(var(--status-operational));
+}
+
+.status-dot-degraded {
+  background: hsl(var(--status-degraded));
+}
+.status-dot-degraded::after {
+  background: hsl(var(--status-degraded));
+}
+
+.status-dot-outage {
+  background: hsl(var(--status-outage));
+}
+.status-dot-outage::after {
+  background: hsl(var(--status-outage));
+}
+
+/* 🔘 Button Styles */
+.btn-primary {
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(232 91% 55%) 100%);
+  color: white;
+  font-weight: 600;
+  padding: 0.625rem 1.25rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 12px rgba(59, 130, 246, 0.3);
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: hsl(var(--foreground));
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* 🎯 Typography */
+.text-gradient {
+  background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.7) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-primary {
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ✨ Animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.2;
+    transform: scale(1.5);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-fade-in-delay-1 {
+  animation: fadeIn 0.5s ease-out 0.1s forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-delay-2 {
+  animation: fadeIn 0.5s ease-out 0.2s forwards;
+  opacity: 0;
+}
+
+/* 🏷️ Status Pills/Badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-badge-operational {
+  background: rgba(34, 197, 94, 0.15);
+  color: hsl(var(--status-operational));
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.status-badge-degraded {
+  background: rgba(250, 176, 5, 0.15);
+  color: hsl(var(--status-degraded));
+  border: 1px solid rgba(250, 176, 5, 0.3);
+}
+
+.status-badge-outage {
+  background: rgba(239, 68, 68, 0.15);
+  color: hsl(var(--status-outage));
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* 📦 Empty State */
+.empty-state {
+  border: 2px dashed rgba(255, 255, 255, 0.1);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.02) 0%,
+    transparent 100%
+  );
+}
+
+/* 🔗 Interactive Elements */
+.interactive-card {
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.interactive-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    rgba(59, 130, 246, 0.03) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.interactive-card:hover::after {
+  opacity: 1;
+}
