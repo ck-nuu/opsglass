@@ -1,135 +1,75 @@
-# Turborepo starter
+# OpsGlass
 
-This Turborepo starter is maintained by the Turborepo core team.
+OpsGlass is a Unified Application & Dependency Monitoring Platform.
 
-## Using this example
+## Architecture
 
-Run the following command:
+- `apps/web`: Next.js dashboard and API
+- `apps/worker`: Node.js monitoring worker (using BullMQ)
+- `packages/database`: Shared database schema and Drizzle ORM
+- `packages/core`: Shared types and logic
 
-```sh
-npx create-turbo@latest
+## Production Monitoring
+
+### Checking Worker Health
+
+To verify if the monitoring worker is running correctly in production, use the built-in health check tool. This will verify:
+- Database connectivity and recent check activity.
+- Redis connectivity and BullMQ queue status.
+- Number of active workers listening to the queue.
+- Upcoming scheduled checks.
+
+Run the following command from the root directory:
+
+```bash
+npm run health-check --filter=worker
 ```
 
-## What's inside?
+Or from the `apps/worker` directory:
 
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+```bash
+npm run health-check
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+### Healthy Output Example
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+```text
+🚀 --- OpsGlass Worker Health Check ---
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+📊 1. Database Status
+   ✅ Components: 11
+   ✅ Total Checks: 9
+   ✅ Total Results: 5459
 
-### Develop
+🕒 Recent Check Activity (last 5):
+   ✅ [7:13:51 AM] DNS (11ms): Resolved 6 records
+   ✅ [7:13:43 AM] DNS (11ms): Resolved 1 records
 
-To develop all apps and packages, run the following command:
+🔋 2. Queue & Redis Status
+   ✅ Redis connected (redis://localhost:6379)
+   ✅ Active Workers: 3
+   📦 Job Counts:
+      Waiting:   0
+      Active:    0
+      Completed: 5763
+      Failed:    955
 
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+📅 3. Scheduler Prognosis
+   ✅ Due Checks: 0
 ```
 
-### Remote Caching
+## Development
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+### Setup
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+1. Copy `.env.example` to `.env` and fill in the values.
+2. Install dependencies: `npm install`
+3. Start local infrastructure: `docker-compose up -d`
+4. Run development services: `npm run dev`
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+### Project Structure
 
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+- `apps/web`: The main Next.js application.
+- `apps/worker`: The background worker that performs the actual checks.
+- `packages/database`: Contains the database schema and migrations.
+- `packages/core`: Contains shared types and the status calculation engine.

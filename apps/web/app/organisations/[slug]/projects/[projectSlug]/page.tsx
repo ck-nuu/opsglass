@@ -1,5 +1,5 @@
 import { db, organisations, projects, components, checks } from '@repo/database';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import ProjectClient from './ProjectClient';
 
@@ -32,7 +32,7 @@ async function getComponents(projectId: string) {
 async function getChecks(componentIds: string[]) {
     if (componentIds.length === 0) return [];
     return await db.select().from(checks)
-        .where(sql`component_id IN ${componentIds}`);
+        .where(inArray(checks.componentId, componentIds));
 }
 
 export default async function ProjectPage({ params }: PageProps) {

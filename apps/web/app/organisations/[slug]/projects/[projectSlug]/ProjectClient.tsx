@@ -7,6 +7,7 @@ import {
     ArrowLeft, Plus, ChevronRight, Activity, Server, Box,
     Database, Globe, Zap, Settings, RefreshCw
 } from 'lucide-react';
+import { getStatusLabel, type Status as CoreStatus } from '@repo/core';
 import CreateComponentModal from '@/app/components/CreateComponentModal';
 import CreateCheckModal from '@/app/components/CreateCheckModal';
 
@@ -109,7 +110,11 @@ export default function ProjectClient({ organisation, project, components, check
 
     useEffect(() => {
         setMounted(true);
-    }, []);
+        const interval = setInterval(() => {
+            router.refresh();
+        }, 15000); // 15s polling
+        return () => clearInterval(interval);
+    }, [router]);
 
     const activeChecksCount = checks.filter(c => c.id).length; // Filter basic valid checks, essentially all loaded checks
 
@@ -168,9 +173,7 @@ export default function ProjectClient({ organisation, project, components, check
                                 <div className={`status-dot ${getStatusDotClass(project.status)}`} />
                             </div>
                             <span className="text-2xl font-bold">
-                                {project.status === 'operational' ? 'All Operational' :
-                                    project.status === 'unknown' ? 'No Checks Yet' :
-                                        project.status?.replace('_', ' ').replace(/^\w/, c => c.toUpperCase())}
+                                {project.status ? getStatusLabel(project.status as any) : 'Unknown'}
                             </span>
                         </div>
 

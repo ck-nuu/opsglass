@@ -1,15 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Plus, ChevronRight, Activity, Server, FolderOpen, Globe, ExternalLink } from 'lucide-react';
+import { getStatusLabel, type Status as CoreStatus } from '@repo/core';
 import CreateProjectModal from '@/app/components/CreateProjectModal';
 
 interface Organisation {
     id: string;
     name: string;
     slug: string;
+    status: string | null;
     isPublic: boolean | null;
     createdAt: Date | null;
 }
@@ -22,9 +24,16 @@ interface Project {
     createdAt: Date | null;
 }
 
+interface Component {
+    id: string;
+    projectId: string;
+    name: string;
+}
+
 interface OrganisationClientProps {
     organisation: Organisation;
     projects: Project[];
+    components: Component[];
 }
 
 const getStatusDotClass = (status: string | null) => {
@@ -41,9 +50,16 @@ const getStatusDotClass = (status: string | null) => {
     }
 };
 
-export default function OrganisationClient({ organisation, projects }: OrganisationClientProps) {
+export default function OrganisationClient({ organisation, projects, components }: OrganisationClientProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const router = useRouter();
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            router.refresh();
+        }, 30000); // 30s polling
+        return () => clearInterval(interval);
+    }, [router]);
 
     const handleSuccess = () => {
         router.refresh();
@@ -125,9 +141,11 @@ export default function OrganisationClient({ organisation, projects }: Organisat
                                     </div>
                                     <span className="font-medium text-sm text-muted-foreground">Organisation Status</span>
                                 </div>
-                                <div className="status-dot status-dot-operational" />
+                                <div className={`status-dot ${getStatusDotClass(organisation.status)}`} />
                             </div>
-                            <span className="text-2xl font-bold">All Operational</span>
+                            <span className="text-2xl font-bold">
+                                {organisation.status ? getStatusLabel(organisation.status as any) : 'Unknown'}
+                            </span>
                         </div>
 
                         <div className="glass-card p-6 rounded-2xl animate-fade-in-delay-1">
@@ -151,7 +169,7 @@ export default function OrganisationClient({ organisation, projects }: Organisat
                                 <span className="font-medium text-sm text-muted-foreground">Components</span>
                             </div>
                             <div className="flex items-baseline gap-2">
-                                <span className="text-4xl font-bold">0</span>
+                                <span className="text-4xl font-bold">{components.length}</span>
                                 <span className="text-muted-foreground text-sm">monitored</span>
                             </div>
                         </div>
@@ -196,7 +214,9 @@ export default function OrganisationClient({ organisation, projects }: Organisat
                                         </h3>
                                         <p className="text-sm text-muted-foreground">{project.slug}</p>
                                         <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
-                                            <span className="text-xs text-muted-foreground">0 components</span>
+                                            <span className="text-xs text-muted-foreground">
+                                                {components.filter(c => c.projectId === project.id).length} components
+                                            </span>
                                             <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-white transition-colors" />
                                         </div>
                                     </Link>

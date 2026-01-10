@@ -5,7 +5,7 @@
 export type Status = 'operational' | 'degraded' | 'partial_outage' | 'major_outage' | 'maintenance' | 'unknown';
 
 // Status priority (higher = worse)
-const STATUS_PRIORITY: Record<Status, number> = {
+export const STATUS_PRIORITY: Record<Status, number> = {
     operational: 0,
     maintenance: 1,
     degraded: 2,

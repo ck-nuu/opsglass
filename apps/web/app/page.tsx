@@ -1,5 +1,6 @@
 import { db, organisations, projects, components, incidents } from '@repo/database';
 import { desc, count, isNull, eq } from 'drizzle-orm';
+import { STATUS_PRIORITY, type Status } from '@repo/core';
 import DashboardClient from './components/DashboardClient';
 
 export const dynamic = 'force-dynamic';
@@ -31,13 +32,23 @@ export default async function Page() {
   const orgs = await getOrganisations();
 
   // Fetch stats
-  const [componentsCount] = await db.select({ value: count() }).from(components);
-  const [incidentsCount] = await db.select({ value: count() }).from(incidents).where(isNull(incidents.resolvedAt));
+  const componentsResult = await db.select({ value: count() }).from(components);
+  const incidentsResult = await db.select({ value: count() }).from(incidents).where(isNull(incidents.resolvedAt));
+
+  const activeIncidents = Number(incidentsResult[0]?.value || 0);
+  const worstOrgStatus = orgs.reduce((worst, org) => {
+    const currentStatus = (org.status || 'unknown') as Status;
+    return (STATUS_PRIORITY[currentStatus] > STATUS_PRIORITY[worst]) ? currentStatus : worst;
+  }, 'operational' as Status);
+
+  const systemStatus: 'operational' | 'degraded' | 'outage' =
+    (activeIncidents > 0 || worstOrgStatus === 'major_outage' || worstOrgStatus === 'partial_outage') ? 'outage' :
+      (worstOrgStatus === 'degraded' ? 'degraded' : 'operational');
 
   const stats = {
-    services: componentsCount?.value || 0,
-    incidents: incidentsCount?.value || 0,
-    systemStatus: ((incidentsCount?.value || 0) > 0 ? 'outage' : 'operational') as 'operational' | 'degraded' | 'outage',
+    services: Number(componentsResult[0]?.value || 0),
+    incidents: activeIncidents,
+    systemStatus,
   };
 
   return <DashboardClient organisations={orgs} stats={stats} />;

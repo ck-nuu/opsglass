@@ -84,3 +84,70 @@ export const dailyStats = pgTable('daily_stats', {
 }, (t) => [
     uniqueIndex('component_date_idx').on(t.componentId, t.date)
 ]);
+
+// Relations
+import { relations } from 'drizzle-orm';
+
+export const organisationsRelations = relations(organisations, ({ many }) => ({
+    projects: many(projects),
+}));
+
+export const projectsRelations = relations(projects, ({ one, many }) => ({
+    organisation: one(organisations, {
+        fields: [projects.organisationId],
+        references: [organisations.id],
+    }),
+    components: many(components),
+    incidents: many(incidents),
+}));
+
+export const componentsRelations = relations(components, ({ one, many }) => ({
+    project: one(projects, {
+        fields: [components.projectId],
+        references: [projects.id],
+    }),
+    checks: many(checks),
+    incidents: many(incidents),
+    dailyStats: many(dailyStats),
+}));
+
+export const checksRelations = relations(checks, ({ one, many }) => ({
+    component: one(components, {
+        fields: [checks.componentId],
+        references: [components.id],
+    }),
+    results: many(checkResults),
+}));
+
+export const checkResultsRelations = relations(checkResults, ({ one }) => ({
+    check: one(checks, {
+        fields: [checkResults.checkId],
+        references: [checks.id],
+    }),
+}));
+
+export const incidentsRelations = relations(incidents, ({ one, many }) => ({
+    project: one(projects, {
+        fields: [incidents.projectId],
+        references: [projects.id],
+    }),
+    component: one(components, {
+        fields: [incidents.componentId],
+        references: [components.id],
+    }),
+    updates: many(incidentUpdates),
+}));
+
+export const incidentUpdatesRelations = relations(incidentUpdates, ({ one }) => ({
+    incident: one(incidents, {
+        fields: [incidentUpdates.incidentId],
+        references: [incidents.id],
+    }),
+}));
+
+export const dailyStatsRelations = relations(dailyStats, ({ one }) => ({
+    component: one(components, {
+        fields: [dailyStats.componentId],
+        references: [components.id],
+    }),
+}));

@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Activity, CircleCheck, CheckCircle2, AlertTriangle, XCircle, Info } from 'lucide-react';
 import Link from 'next/link';
 
@@ -58,6 +60,15 @@ const getStatusLabel = (status: string | null) => {
 }
 
 export default function StatusPageClient({ organisation, projects, incidents }: StatusPageClientProps) {
+    const router = useRouter();
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            router.refresh();
+        }, 60000); // 60s polling
+        return () => clearInterval(interval);
+    }, [router]);
+
     const globalStatus = incidents.length > 0 && incidents[0] ? incidents[0].status : (projects.some(p => p.status !== 'operational') ? 'degraded' : 'operational');
     const GlobalIcon = getStatusIcon(globalStatus);
     const globalColor = getStatusColor(globalStatus).split(' ')[1]; // get text color class

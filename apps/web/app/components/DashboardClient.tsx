@@ -1,15 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Activity, Server, Shield, Plus, ChevronRight } from 'lucide-react';
+import { getStatusLabel, type Status as CoreStatus } from '@repo/core';
 import CreateOrganisationModal from './CreateOrganisationModal';
 
 interface Organisation {
     id: string;
     name: string;
     slug: string;
+    status: string | null;
     createdAt: Date | null;
     projectCount: number;
 }
@@ -23,9 +25,46 @@ interface DashboardClientProps {
     };
 }
 
+const getStatusDotClass = (status: string | null) => {
+    switch (status) {
+        case 'operational':
+            return 'status-dot-operational';
+        case 'degraded':
+            return 'status-dot-degraded';
+        case 'major_outage':
+        case 'partial_outage':
+        case 'outage':
+            return 'status-dot-outage';
+        default:
+            return '';
+    }
+};
+
+const getStatusBadgeClass = (status: string | null) => {
+    switch (status) {
+        case 'operational':
+            return 'status-badge-operational';
+        case 'degraded':
+            return 'status-badge-degraded';
+        case 'outage':
+        case 'major_outage':
+        case 'partial_outage':
+            return 'status-badge-outage';
+        default:
+            return '';
+    }
+};
+
 export default function DashboardClient({ organisations, stats }: DashboardClientProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const router = useRouter();
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            router.refresh();
+        }, 30000); // 30s polling
+        return () => clearInterval(interval);
+    }, [router]);
 
     const handleSuccess = () => {
         router.refresh();
@@ -66,15 +105,19 @@ export default function DashboardClient({ organisations, stats }: DashboardClien
                                     </div>
                                     <span className="font-medium text-sm text-muted-foreground">System Status</span>
                                 </div>
-                                <div className="status-dot status-dot-operational" />
+                                <div className={`status-dot ${getStatusDotClass(stats.systemStatus)}`} />
                             </div>
                             <div className="flex items-baseline gap-2">
-                                <span className="text-2xl font-bold">All Operational</span>
+                                <span className="text-2xl font-bold">
+                                    {stats.systemStatus === 'operational' ? 'All Operational' :
+                                        stats.systemStatus === 'degraded' ? 'Degraded Performance' : 'System Outage'}
+                                </span>
                             </div>
                             <div className="mt-3">
-                                <span className="status-badge status-badge-operational">
+                                <span className={`status-badge ${getStatusBadgeClass(stats.systemStatus)}`}>
                                     <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                                    Healthy
+                                    {stats.systemStatus === 'operational' ? 'Healthy' :
+                                        stats.systemStatus === 'degraded' ? 'Degraded' : 'Issue Detected'}
                                 </span>
                             </div>
                         </div>
@@ -113,7 +156,7 @@ export default function DashboardClient({ organisations, stats }: DashboardClien
                                 <span className="text-muted-foreground text-sm">incidents</span>
                             </div>
                             <p className="text-xs text-muted-foreground mt-3">
-                                No active incidents at this time
+                                {stats.incidents === 0 ? 'No active incidents at this time' : `${stats.incidents} unresolved incidents`}
                             </p>
                         </div>
                     </section>
@@ -156,7 +199,7 @@ export default function DashboardClient({ organisations, stats }: DashboardClien
                                                     {org.name.charAt(0).toUpperCase()}
                                                 </span>
                                             </div>
-                                            <div className="status-dot status-dot-operational" />
+                                            <div className={`status-dot ${getStatusDotClass(org.status)}`} />
                                         </div>
                                         <h3 className="text-lg font-semibold mb-1 group-hover:text-gradient transition-all">
                                             {org.name}

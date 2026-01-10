@@ -1,5 +1,6 @@
 import { Job } from 'bullmq';
-import { providers, calculateProjectStatus, Status } from '@repo/core';
+import { calculateProjectStatus, Status } from '@repo/core';
+import { providers } from '@repo/core/server';
 import { db, checkResults, components, projects, organisations, incidents, incidentUpdates, dailyStats, eq, and, isNull } from '@repo/database';
 import { sql } from 'drizzle-orm';
 
@@ -26,7 +27,7 @@ export const checkRunner = async (job: Job) => {
     await db.insert(checkResults).values({
         checkId,
         status: result.status,
-        latency: result.latency || 0,
+        latency: Math.round(result.latency || 0),
         message: result.message,
     });
 
