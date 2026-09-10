@@ -1,0 +1,10 @@
+{
+  "name": "cloudflare",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@repo/registry": "*",
+    "jose": "6.2.12",
+    "zod": "^3.22.4"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "opsglass",
+  "account_id": "bfc8014b99ecc75f4211e56ca6bb2233",
+  "main": "apps/cloudflare/src/index.ts",
+  "compatibility_date": "2026-09-09",
+  "workers_dev": true,
+  "preview_urls": false,
+  "assets": {
+    "directory": "./apps/web/out",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"],
+    "html_handling": "auto-trailing-slash",
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "opsglass",
+      "database_id": "b9daadab-29fe-4932-9b9b-071c68eb08b2",
+      "migrations_dir": "apps/cloudflare/migrations",
+    },
+  ],
+  "triggers": { "crons": ["* * * * *"] },
+  "vars": {
+    "ENVIRONMENT": "production",
+    "ACCESS_TEAM_DOMAIN": "sweet-sea-9ab8.cloudflareaccess.com",
+    "OIDC_CLIENT_ID": "301197e93008842cad1bd7c22ee74243064e9eeec70186031210f86f45fcfdd7",
+    "APP_ORIGINS": "https://ops.mdanso.com,https://opsglass-mdanso.pages.dev,https://opsglass.mdanso-ops.workers.dev",
+    "ALLOWED_EMAILS": "ops@mdanso.com",
+    "CHECK_BATCH_SIZE": "3",
+    "MAX_CLOUD_CHECKS": "30",
+  },
+  "observability": { "enabled": true },
+  "dev": { "ip": "127.0.0.1", "port": 8787 },
+}

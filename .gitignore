@@ -36,3 +36,12 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# Cloudflare local state and private credentials
+.wrangler/
+.dev.vars
+.dev.vars.*
+collector.json
+collector-*.json
+discoveries.json
+*.tsbuildinfo

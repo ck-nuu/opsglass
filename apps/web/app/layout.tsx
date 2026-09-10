@@ -1,22 +1,32 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
-
-const inter = Inter({ subsets: ["latin"] });
-
+const geist = localFont({
+  src: "./fonts/GeistVF.woff",
+  variable: "--font-geist",
+  weight: "100 900",
+  display: "swap",
+});
+const mono = localFont({
+  src: "./fonts/GeistMonoVF.woff",
+  variable: "--font-mono",
+  weight: "100 900",
+  display: "swap",
+});
 export const metadata: Metadata = {
-  title: "OpsGlass - Unified Monitoring",
-  description: "Single Pane of Glass for Multi-Project Monitoring",
+  title: "OpsGlass · Your project workspace",
+  description: "Project context, technology, and health. All in one place.",
+  robots: { index: false, follow: false },
 };
-
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className} suppressHydrationWarning>
+    <html lang="en">
+      <body className={`${geist.variable} ${mono.variable}`}>
+        <a href="#main" className="skip-link">
+          Skip to content
+        </a>
         {children}
       </body>
     </html>

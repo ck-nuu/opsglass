@@ -4,20 +4,20 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3000",
-    "build": "next build",
+    "dev": "next dev --webpack --hostname 127.0.0.1 --port 3000",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint --max-warnings 0",
     "check-types": "next typegen && tsc --noEmit"
   },
   "dependencies": {
     "@repo/core": "*",
-    "@repo/database": "*",
     "@repo/ui": "*",
     "lucide-react": "^0.562.0",
     "next": "16.1.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "@repo/registry": "*"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",

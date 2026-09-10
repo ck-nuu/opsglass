@@ -1,0 +1,34 @@
+{
+  "name": "OpsGlass SSO",
+  "type": "saas",
+  "saas_app": {
+    "auth_type": "oidc",
+    "grant_types": [
+      "authorization_code_with_pkce"
+    ],
+    "allow_pkce_without_client_secret": false,
+    "scopes": [
+      "openid",
+      "email",
+      "profile"
+    ],
+    "redirect_uris": [
+      "https://ops.mdanso.com/api/auth/callback",
+      "https://opsglass-mdanso.pages.dev/api/auth/callback",
+      "https://opsglass.mdanso-ops.workers.dev/api/auth/callback"
+    ]
+  },
+  "policies": [
+    {
+      "name": "OpsGlass owner",
+      "decision": "allow",
+      "include": [
+        {
+          "email": {
+            "email": "ops@mdanso.com"
+          }
+        }
+      ]
+    }
+  ]
+}

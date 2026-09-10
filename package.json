@@ -2,19 +2,33 @@
   "name": "opsglass",
   "private": true,
   "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev",
-    "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "dev": "node scripts/dev.mjs",
+    "build": "npm run build --workspace=web",
+    "check-types": "npm run check-types --workspace=web && tsc -p apps/cloudflare/tsconfig.json --noEmit && tsc -p apps/pages/tsconfig.json --noEmit",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "test:integration": "node --import tsx --test tests/*.integration.ts",
+    "preview": "node scripts/preview.mjs",
+    "db:migrate": "wrangler d1 migrations apply opsglass --local",
+    "db:migrate:remote": "wrangler d1 migrations apply opsglass --remote",
+    "deploy": "node scripts/preflight.mjs && npm run build && wrangler deploy && npm run deploy:frontend",
+    "deploy:check": "npm run build && wrangler deploy --dry-run",
+    "collector": "node scripts/collector.mjs",
+    "lint": "npm run lint --workspace=web",
+    "format": "prettier --write apps/web/app apps/cloudflare/src packages/registry/src",
+    "legacy:dev": "turbo run dev --filter=worker",
+    "deploy:frontend": "cd apps/pages && CLOUDFLARE_ACCOUNT_ID=bfc8014b99ecc75f4211e56ca6bb2233 wrangler pages deploy ../web/out --project-name opsglass-mdanso --branch main --profile opsglass"
   },
   "devDependencies": {
     "prettier": "^3.7.4",
     "turbo": "^2.7.3",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "wrangler": "4.130.0",
+    "@cloudflare/workers-types": "5.20260908.1",
+    "tsx": "^4.21.0",
+    "miniflare": "5.20260908.0-alpha"
   },
   "engines": {
-    "node": ">=20.9"
+    "node": ">=22.18"
   },
   "packageManager": "npm@11.6.2",
   "workspaces": [

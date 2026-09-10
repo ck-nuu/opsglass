@@ -1,0 +1,7 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "opsglass-mdanso",
+  "pages_build_output_dir": "../web/out",
+  "compatibility_date": "2026-09-09",
+  "services": [{ "binding": "API", "service": "opsglass" }],
+}
