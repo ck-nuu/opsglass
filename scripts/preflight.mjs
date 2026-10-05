@@ -49,5 +49,5 @@ if (missing.length) {
   process.exitCode = 1;
 } else
   console.log(
-    "Deployment configuration is ready. Install OIDC_CLIENT_SECRET as a Worker secret before signing in.",
+    "Deployment configuration is ready. Install OIDC_CLIENT_SECRET and CREDENTIAL_ENCRYPTION_KEY as Worker secrets before using sign-in and protected monitoring.",
   );

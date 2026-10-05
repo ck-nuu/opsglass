@@ -312,6 +312,7 @@ export default function Portal() {
                 <ProjectDetail
                   project={chosen}
                   collectors={workspace.collectors}
+                  credentials={workspace.credentials}
                   owner={!!owner}
                   demo={demo}
                   onBack={() => navigate("projects")}

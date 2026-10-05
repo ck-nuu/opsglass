@@ -21,7 +21,11 @@ test("Pages gateway and OIDC browser sessions", async (t) => {
     }),
   );
   const db = await mf.getD1Database("DB", "session-test");
-  for (const migration of ["0001_registry.sql", "0002_browser_sessions.sql"]) {
+  for (const migration of [
+    "0001_registry.sql",
+    "0002_browser_sessions.sql",
+    "0003_monitoring_credentials.sql",
+  ]) {
     const sql = await readFile(
       new URL("../apps/cloudflare/migrations/" + migration, import.meta.url),
       "utf8",

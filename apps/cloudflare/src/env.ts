@@ -9,6 +9,7 @@ export interface Env {
   OIDC_CLIENT_SECRET?: string;
   APP_ORIGINS?: string;
   GITHUB_TOKEN?: string;
+  CREDENTIAL_ENCRYPTION_KEY?: string;
   AGENT_READ_TOKEN?: string;
   ALERT_WEBHOOK_URL?: string;
   CHECK_BATCH_SIZE?: string;

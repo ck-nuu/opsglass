@@ -230,6 +230,7 @@ export async function localProbe(check, config) {
   const start = Date.now();
   const timeout = Math.max(1000, Math.min(10000, check.timeout || 8000));
   try {
+    if (check.credentialError) throw new Error(check.credentialError);
     if (check.kind === "http") {
       let target = new URL(check.target);
       if (
@@ -238,20 +239,35 @@ export async function localProbe(check, config) {
         target.password
       )
         throw new Error("Use an HTTP URL without embedded credentials.");
-      const response = await fetch(target, {
-        method: "GET",
-        signal: AbortSignal.timeout(timeout),
-        redirect: "follow",
-      });
-      await response.body?.cancel();
-      return {
-        status:
-          response.status === check.expectedStatus
-            ? "operational"
-            : "major_outage",
-        latency: Date.now() - start,
-        message: `HTTP ${response.status}; expected ${check.expectedStatus}.`,
-      };
+      const credentialOrigin = target.origin;
+      for (let redirect = 0; redirect <= 2; redirect++) {
+        const response = await fetch(target, {
+          method: "GET",
+          signal: AbortSignal.timeout(timeout),
+          redirect: "manual",
+          headers:
+            target.origin === credentialOrigin
+              ? check.requestHeaders || {}
+              : {},
+        });
+        await response.body?.cancel();
+        if (
+          [301, 302, 303, 307, 308].includes(response.status) &&
+          response.headers.get("location")
+        ) {
+          target = new URL(response.headers.get("location"), target);
+          continue;
+        }
+        return {
+          status:
+            response.status === check.expectedStatus
+              ? "operational"
+              : "major_outage",
+          latency: Date.now() - start,
+          message: `HTTP ${response.status}; expected ${check.expectedStatus}.`,
+        };
+      }
+      throw new Error("More than two redirects.");
     }
     if (check.kind === "docker") {
       if (!config.allowDocker)

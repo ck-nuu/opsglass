@@ -42,8 +42,10 @@ export interface CheckRow {
   message: string;
 }
 export function readCheck(row: CheckRow): Check {
+  const document = JSON.parse(row.document);
   return {
-    ...JSON.parse(row.document),
+    ...document,
+    credentialId: document.credentialId || "",
     id: row.id,
     projectId: row.project_id,
     runner: row.runner,

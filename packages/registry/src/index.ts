@@ -16,6 +16,19 @@ export const healthStates = [
 ] as const;
 export type Health = (typeof healthStates)[number];
 export type CheckKind = "http" | "dns" | "ssl" | "ping" | "docker";
+export const credentialKinds = [
+  "basic",
+  "bearer",
+  "cloudflare_access",
+] as const;
+export type CredentialKind = (typeof credentialKinds)[number];
+export type CredentialSummary = {
+  id: string;
+  name: string;
+  kind: CredentialKind;
+  createdAt: string;
+  updatedAt: string;
+};
 export type StackItem = {
   name: string;
   version?: string;
@@ -85,6 +98,7 @@ export type Check = {
   timeout: number;
   expectedStatus: number;
   expectedValue: string;
+  credentialId: string;
   critical: boolean;
   enabled: boolean;
   failureThreshold: number;
@@ -156,12 +170,14 @@ export type ImportCandidate = {
 export type Workspace = {
   projects: Project[];
   collectors: Collector[];
+  credentials: CredentialSummary[];
   incidents: Incident[];
   activity: AuditEvent[];
   user: string;
   role: "owner" | "viewer";
   mode: string;
   githubConfigured: boolean;
+  credentialVaultConfigured: boolean;
   monitor: {
     lastTickAt: string | null;
     dueChecks: number;

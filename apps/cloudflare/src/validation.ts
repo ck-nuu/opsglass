@@ -96,6 +96,7 @@ export const checkInput = z
     timeout: z.number().int().min(1000).max(10000).default(8000),
     expectedStatus: z.number().int().min(100).max(599).default(200),
     expectedValue: short.default(""),
+    credentialId: z.string().uuid().or(z.literal("")).default(""),
     critical: z.boolean().default(true),
     enabled: z.boolean().default(true),
     failureThreshold: z.number().int().min(1).max(10).default(2),
@@ -120,9 +121,48 @@ export const checkInput = z
         code: "custom",
         message: "HTTP checks need an http:// or https:// URL.",
       });
+    if (c.credentialId && c.kind !== "http")
+      ctx.addIssue({
+        code: "custom",
+        path: ["credentialId"],
+        message: "Authentication credentials can only be used by HTTP checks.",
+      });
     if (
       c.kind === "docker" &&
       !/^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}$/.test(c.target)
     )
       ctx.addIssue({ code: "custom", message: "Use a container name or ID." });
   });
+
+const headerSecret = z
+  .string()
+  .min(1)
+  .max(2000)
+  .refine((value) => !/[\r\n\0]/.test(value), "Remove line breaks.");
+
+export const credentialInput = z.discriminatedUnion("kind", [
+  z.object({
+    name: short.min(1),
+    kind: z.literal("basic"),
+    username: z
+      .string()
+      .min(1)
+      .max(500)
+      .refine(
+        (value) => !value.includes(":"),
+        "A Basic Auth username cannot contain a colon.",
+      ),
+    password: z.string().min(1).max(2000),
+  }),
+  z.object({
+    name: short.min(1),
+    kind: z.literal("bearer"),
+    token: headerSecret,
+  }),
+  z.object({
+    name: short.min(1),
+    kind: z.literal("cloudflare_access"),
+    clientId: headerSecret,
+    clientSecret: headerSecret,
+  }),
+]);

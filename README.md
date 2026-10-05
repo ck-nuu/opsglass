@@ -30,6 +30,7 @@ Open http://127.0.0.1:8787. Use `/?demo=1` for an explicitly labelled, read-only
 - Next action, blockers, notes, session handoffs, and architecture decisions.
 - GitHub manifest inspection and local folder/Docker discovery with review before import.
 - HTTP and DNS checks on Cloudflare; HTTP, DNS, certificate, ping, and Docker checks on Mac/Windows collectors.
+- Encrypted Basic Auth, bearer-token, and Cloudflare Access credentials for protected HTTP checks.
 - Per-check confirmation thresholds, current observations, expired observations, incidents, and seven days of raw samples.
 - Separate collector heartbeat state, revocable machine tokens, and deployment-level monitoring pause.
 - Cloudflare Access OIDC sign-in with secure browser sessions. Owners manage the workspace; collaborators have view access to individual projects.

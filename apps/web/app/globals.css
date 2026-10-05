@@ -2084,6 +2084,13 @@ nav button:hover {
 .machine-foot .text-button {
   font-size: 10px;
 }
+.credential-grid {
+  margin-bottom: 34px;
+}
+.credential-actions > span:last-child {
+  display: flex;
+  gap: 5px;
+}
 .integration-grid {
   margin-top: 38px;
   border-top: 1px solid var(--line);

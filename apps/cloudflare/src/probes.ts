@@ -100,6 +100,7 @@ export async function runCloudProbe(
     "kind" | "target" | "timeout" | "expectedStatus" | "expectedValue"
   >,
   fetcher: typeof fetch = fetch,
+  requestHeaders: Record<string, string> = {},
 ): Promise<Observation> {
   const started = Date.now();
   const controller = new AbortController();
@@ -131,13 +132,17 @@ export async function runCloudProbe(
     if (check.kind !== "http")
       throw new Error("This check needs a local collector.");
     let next = check.target;
+    const credentialOrigin = new URL(check.target).origin;
     for (let redirect = 0; redirect <= 2; redirect++) {
       const url = await safeHttpTarget(next, controller.signal, fetcher);
       const response = await fetcher(url, {
         method: "GET",
         redirect: "manual",
         signal: controller.signal,
-        headers: { "User-Agent": "OpsGlass/1.0 (uptime monitor)" },
+        headers: {
+          "User-Agent": "OpsGlass/1.0 (uptime monitor)",
+          ...(url.origin === credentialOrigin ? requestHeaders : {}),
+        },
       });
       await response.body?.cancel();
       if (

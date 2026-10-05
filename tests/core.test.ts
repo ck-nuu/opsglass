@@ -22,6 +22,7 @@ const check = (overrides: Partial<Check> = {}): Check => ({
   timeout: 5000,
   expectedStatus: 200,
   expectedValue: "",
+  credentialId: "",
   critical: true,
   enabled: true,
   failureThreshold: 2,
@@ -140,4 +141,32 @@ test("cloud probes reject private targets and validate redirects", async () => {
   assert.equal(publicAddress("100.75.2.1"), false);
   assert.equal(publicAddress("192.168.1.2"), false);
   assert.equal(publicAddress("::ffff:127.0.0.1"), false);
+});
+
+test("cloud probes use credentials only on the configured origin", async () => {
+  const observed: Array<{ url: string; authorization: string | null }> = [];
+  const fetcher = async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input);
+    if (url.includes("dns-query"))
+      return Response.json({
+        Status: 0,
+        Answer: [{ type: 1, data: "93.184.216.34" }],
+      });
+    const headers = new Headers(init?.headers);
+    observed.push({ url, authorization: headers.get("authorization") });
+    return url.startsWith("https://protected.example")
+      ? new Response(null, {
+          status: 302,
+          headers: { Location: "https://status.example/health" },
+        })
+      : new Response(null, { status: 200 });
+  };
+  const result = await runCloudProbe(
+    check({ target: "https://protected.example/health" }),
+    fetcher as typeof fetch,
+    { Authorization: "Bearer private-token" },
+  );
+  assert.equal(result.status, "operational");
+  assert.equal(observed[0].authorization, "Bearer private-token");
+  assert.equal(observed[1].authorization, null);
 });

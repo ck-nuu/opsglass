@@ -8,6 +8,13 @@ Check status changes use configurable consecutive-failure and recovery threshold
 
 Cloud checks run in small Cron batches. Default cloud frequency is ten minutes. Local collectors run no arbitrary scripts or stored project commands. HTTP probes use GET, bounded timeouts, and validate redirects; cloud probes reject private destinations. Monitoring has one observation location per check, not a multi-region SLA guarantee.
 
+Protected HTTP checks can reference an owner-managed Basic Auth, bearer-token,
+or Cloudflare Access credential. The Worker decrypts a credential only for an
+assigned probe. Authentication headers are sent to the configured URL's origin
+and stripped if a redirect crosses origins. A local collector receives the
+temporary headers only with its own leased assignment and keeps them in memory.
+Use a dedicated monitoring account or token with the least access required.
+
 ## API
 
 All `/api/v1` management routes require a valid browser session established through Cloudflare Access OIDC (or a configured legacy Access JWT) or the optional read-only agent credential. Writes require a workspace owner. Cross-origin browser writes are rejected.
@@ -21,6 +28,7 @@ All `/api/v1` management routes require a valid browser session established thro
 - `POST /api/v1/projects/:id/checks`: create a check.
 - `PUT|DELETE /api/v1/checks/:id`: update/delete a check.
 - `POST /api/v1/checks/:id/run`: execute a cloud check or request a collector assignment.
+- `GET|POST /api/v1/credentials`, `PUT|DELETE /api/v1/credentials/:id`: manage encrypted monitoring credentials (owner only).
 - `GET|POST|DELETE /api/v1/projects/:id/access`: project viewer grants (owner only).
 - `POST /api/v1/github/inspect`: inspect a repository without saving a project.
 - `GET|POST /api/v1/collectors`, `DELETE /api/v1/collectors/:id`: manage machines.
@@ -36,7 +44,7 @@ All `/api/v1` management routes require a valid browser session established thro
 
 ## Backups and retention
 
-The inventory export excludes credentials and raw check results. Restore creates new project records with the same context and journal. Cloud checks start paused. Local machine assignments and local checks must be recreated, and project sharing must be re-granted. Export files contain private project notes and paths: store them privately.
+The inventory export excludes credentials, credential references, and raw check results. Restore creates new project records with the same context and journal. Cloud checks start paused. Local machine assignments and local checks must be recreated, credentials must be selected again, and project sharing must be re-granted. Export files contain private project notes and paths: store them privately.
 
 The browser importer accepts JSON files up to 500 KB and at most 100 journal entries/checks per project. For larger/full backups, including all samples, access grants and incidents, use D1’s SQL export:
 

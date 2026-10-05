@@ -124,6 +124,8 @@ export function demoWorkspace(): Workspace {
     role: "viewer",
     mode: "demo",
     githubConfigured: false,
+    credentialVaultConfigured: false,
+    credentials: [],
     collectors: [
       {
         id: "mac",

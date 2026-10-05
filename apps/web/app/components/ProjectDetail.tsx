@@ -21,6 +21,7 @@ import {
   type Project,
   type Check,
   type Collector,
+  type CredentialSummary,
   type JournalEntry,
   type Incident,
   type CheckResult,
@@ -45,6 +46,7 @@ type Detail = {
 export default function ProjectDetail({
   project,
   collectors,
+  credentials,
   owner,
   demo,
   onBack,
@@ -54,6 +56,7 @@ export default function ProjectDetail({
 }: {
   project: Project;
   collectors: Collector[];
+  credentials: CredentialSummary[];
   owner: boolean;
   demo: boolean;
   onBack: () => void;
@@ -792,6 +795,7 @@ export default function ProjectDetail({
         <CheckForm
           project={p}
           collectors={collectors}
+          credentials={credentials}
           initial={checkForm || undefined}
           onClose={() => setCheckForm(undefined)}
           onSaved={() => {

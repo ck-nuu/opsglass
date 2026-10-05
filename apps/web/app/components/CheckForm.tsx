@@ -1,17 +1,24 @@
 "use client";
 import { useState } from "react";
-import type { Check, Collector, Project } from "@repo/registry";
+import type {
+  Check,
+  Collector,
+  CredentialSummary,
+  Project,
+} from "@repo/registry";
 import { api } from "../../lib/api";
 import { Panel, Field, ErrorNotice } from "./ui";
 export default function CheckForm({
   project,
   collectors,
+  credentials,
   initial,
   onClose,
   onSaved,
 }: {
   project: Project;
   collectors: Collector[];
+  credentials: CredentialSummary[];
   initial?: Check;
   onClose: () => void;
   onSaved: () => void;
@@ -27,6 +34,7 @@ export default function CheckForm({
     timeout: 8000,
     expectedStatus: 200,
     expectedValue: "",
+    credentialId: "",
     critical: true,
     enabled: true,
     failureThreshold: 2,
@@ -206,17 +214,35 @@ export default function CheckForm({
             </select>
           </Field>
           {draft.kind === "http" && (
-            <Field label="Expected HTTP status">
-              <input
-                type="number"
-                min={100}
-                max={599}
-                value={draft.expectedStatus}
-                onChange={(e) =>
-                  update("expectedStatus", Number(e.target.value))
-                }
-              />
-            </Field>
+            <>
+              <Field label="Expected HTTP status">
+                <input
+                  type="number"
+                  min={100}
+                  max={599}
+                  value={draft.expectedStatus}
+                  onChange={(e) =>
+                    update("expectedStatus", Number(e.target.value))
+                  }
+                />
+              </Field>
+              <Field
+                label="Authentication"
+                hint="The secret stays encrypted and is never included in project exports."
+              >
+                <select
+                  value={draft.credentialId}
+                  onChange={(e) => update("credentialId", e.target.value)}
+                >
+                  <option value="">No authentication</option>
+                  {credentials.map((credential) => (
+                    <option key={credential.id} value={credential.id}>
+                      {credential.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </>
           )}
           {draft.kind === "dns" && (
             <Field label="Expected A record (optional)">

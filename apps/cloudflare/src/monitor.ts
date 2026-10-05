@@ -2,6 +2,7 @@ import { transitionStatus } from "@repo/registry";
 import { Env, HttpError } from "./env";
 import { readCheck, type CheckRow } from "./store";
 import { runCloudProbe, type Observation } from "./probes";
+import { monitoringHeaders } from "./credentials";
 const runningDeployment = `NOT EXISTS (SELECT 1 FROM json_each(json_extract(p.document, '$.deployments')) d WHERE json_extract(d.value, '$.id') = json_extract(c.document, '$.deploymentId') AND json_extract(d.value, '$.expectedRunning') = 0)`;
 export async function claimCheck(
   env: Env,
@@ -110,7 +111,7 @@ export async function runCheckNow(env: Env, id: string) {
       409,
       "This check is paused, its deployment is stopped, or it is already running.",
     );
-  const result = await runCloudProbe(readCheck(row));
+  const result = await observeCloudCheck(env, row);
   await finishCheck(env, row, result);
   return { message: "Check completed.", result };
 }
@@ -128,7 +129,7 @@ export async function scheduledChecks(env: Env) {
   for (const item of due.results) {
     const row = await claimCheck(env, item.id);
     if (!row) continue;
-    await finishCheck(env, row, await runCloudProbe(readCheck(row)));
+    await finishCheck(env, row, await observeCloudCheck(env, row));
   }
   // Bounded cleanup makes retention incremental without a large daily delete.
   if (new Date().getUTCMinutes() % 10 === 0) {
@@ -166,7 +167,42 @@ export async function dueCollectorChecks(env: Env, collectorId: string) {
   const assignments = [];
   for (const item of due.results) {
     const row = await claimCheck(env, item.id);
-    if (row) assignments.push({ ...readCheck(row), leaseId: row.lease_id });
+    if (!row) continue;
+    const check = readCheck(row);
+    try {
+      assignments.push({
+        ...check,
+        leaseId: row.lease_id,
+        requestHeaders: await monitoringHeaders(env, check.credentialId),
+      });
+    } catch {
+      assignments.push({
+        ...check,
+        leaseId: row.lease_id,
+        requestHeaders: {},
+        credentialError: "The monitoring credential is unavailable.",
+      });
+    }
   }
   return assignments;
+}
+
+async function observeCloudCheck(
+  env: Env,
+  row: CheckRow,
+): Promise<Observation> {
+  const check = readCheck(row);
+  try {
+    return await runCloudProbe(
+      check,
+      fetch,
+      await monitoringHeaders(env, check.credentialId),
+    );
+  } catch {
+    return {
+      status: "major_outage",
+      latency: null,
+      message: "The monitoring credential is unavailable.",
+    };
+  }
 }

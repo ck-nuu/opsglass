@@ -57,6 +57,41 @@ test("Docker access is explicit and disabled collectors report unknown", async (
   assert.equal(invalid.status, "major_outage");
 });
 
+test("collector HTTP probes strip credentials on cross-origin redirects", async () => {
+  const originalFetch = globalThis.fetch;
+  const observed: Array<{ url: string; authorization: string | null }> = [];
+  globalThis.fetch = (async (input, init) => {
+    const url = String(input);
+    observed.push({
+      url,
+      authorization: new Headers(init?.headers).get("authorization"),
+    });
+    return url.startsWith("https://protected.example")
+      ? new Response(null, {
+          status: 302,
+          headers: { Location: "https://status.example/health" },
+        })
+      : new Response(null, { status: 200 });
+  }) as typeof fetch;
+  try {
+    const result = await localProbe(
+      {
+        kind: "http",
+        target: "https://protected.example/health",
+        timeout: 1000,
+        expectedStatus: 200,
+        requestHeaders: { Authorization: "Basic private-token" },
+      },
+      {},
+    );
+    assert.equal(result.status, "operational");
+    assert.equal(observed[0].authorization, "Basic private-token");
+    assert.equal(observed[1].authorization, null);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("a slow collector probe does not block other assigned results", async () => {
   const originalFetch = globalThis.fetch;
   const originalSignals = new Map(

@@ -14,6 +14,7 @@ import {
 import type { Workspace } from "@repo/registry";
 import { api, download, relativeTime } from "../../lib/api";
 import { Empty, ErrorNotice, Field, Panel } from "./ui";
+import CredentialManager from "./CredentialManager";
 export default function Connections({
   workspace,
   onChange,
@@ -170,6 +171,13 @@ export default function Connections({
             </button>
           )}
         </Empty>
+      )}
+      {owner && (
+        <CredentialManager
+          workspace={workspace}
+          onChange={onChange}
+          notify={notify}
+        />
       )}
       <div className="integration-grid">
         <article className="integration">

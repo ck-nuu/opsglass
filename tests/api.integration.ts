@@ -5,6 +5,7 @@ import { Miniflare, convertV4MiniflareOptions } from "miniflare";
 import { exportJWK, generateKeyPair, SignJWT } from "jose";
 import worker from "../apps/cloudflare/src/index";
 import type { Env } from "../apps/cloudflare/src/env";
+import { monitoringHeaders } from "../apps/cloudflare/src/credentials";
 
 test("D1-backed API: access, inventory, collector isolation, thresholds, stale state, sharing and restore", async (t) => {
   const mf = new Miniflare(
@@ -46,6 +47,9 @@ test("D1-backed API: access, inventory, collector isolation, thresholds, stale s
     ALLOWED_EMAILS: "owner@example.test",
     CHECK_BATCH_SIZE: "3",
     MAX_CLOUD_CHECKS: "30",
+    CREDENTIAL_ENCRYPTION_KEY: Buffer.from(
+      "0123456789abcdef0123456789abcdef",
+    ).toString("base64"),
   } as unknown as Env;
   async function jwt(email: string) {
     return new SignJWT({ email })
@@ -132,6 +136,67 @@ test("D1-backed API: access, inventory, collector isolation, thresholds, stale s
         assert.equal(
           (await req(`/projects/${project.id}/context`)).body.journal.length,
           1,
+        );
+      },
+    );
+    const monitoringCredential = (
+      await req("/credentials", "POST", {
+        name: "Protected production endpoint",
+        kind: "basic",
+        username: "monitor-user",
+        password: "monitor-password",
+      })
+    ).body;
+    const protectedCheck = (
+      await req(`/projects/${project.id}/checks`, "POST", {
+        name: "Protected HTTP",
+        kind: "http",
+        runner: "cloud",
+        target: "https://protected.example/health",
+        interval: 600,
+        enabled: false,
+        credentialId: monitoringCredential.id,
+      })
+    ).body;
+    await t.test(
+      "monitoring credentials are encrypted, owner-only and protected while in use",
+      async () => {
+        const stored = await db
+          .prepare(
+            "SELECT ciphertext, iv FROM monitoring_credentials WHERE id = ?",
+          )
+          .bind(monitoringCredential.id)
+          .first<{ ciphertext: string; iv: string }>();
+        assert(stored?.ciphertext && stored.iv);
+        assert(!stored.ciphertext.includes("monitor-password"));
+        const headers = await monitoringHeaders(env, monitoringCredential.id);
+        assert.equal(
+          headers.Authorization,
+          `Basic ${Buffer.from("monitor-user:monitor-password").toString("base64")}`,
+        );
+        const ownerWorkspace = (await req("/workspace")).body;
+        assert.equal(ownerWorkspace.credentialVaultConfigured, true);
+        assert.equal(ownerWorkspace.credentials.length, 1);
+        assert(!JSON.stringify(ownerWorkspace).includes("monitor-password"));
+        assert.equal(
+          (await req(`/credentials/${monitoringCredential.id}`, "DELETE"))
+            .status,
+          409,
+        );
+        assert.equal(
+          (
+            await req(`/credentials/${monitoringCredential.id}`, "PUT", {
+              name: "Protected production endpoint",
+              kind: "basic",
+              username: "monitor-user",
+              password: "rotated-password",
+            })
+          ).status,
+          200,
+        );
+        assert.equal(
+          (await monitoringHeaders(env, monitoringCredential.id)).Authorization,
+          `Basic ${Buffer.from("monitor-user:rotated-password").toString("base64")}`,
         );
       },
     );
@@ -288,6 +353,15 @@ test("D1-backed API: access, inventory, collector isolation, thresholds, stale s
         const shared = (await req("/workspace", "GET", undefined, viewer)).body;
         assert.equal(shared.projects.length, 1);
         assert.equal(shared.projects[0].id, project.id);
+        assert.deepEqual(shared.credentials, []);
+        const viewerDetail = (
+          await req(`/projects/${project.id}`, "GET", undefined, viewer)
+        ).body;
+        assert.equal(
+          viewerDetail.checks.find((item: any) => item.id === protectedCheck.id)
+            .credentialId,
+          "",
+        );
         assert.equal(
           (await req(`/projects/${other.id}`, "GET", undefined, viewer)).status,
           404,
@@ -324,6 +398,14 @@ test("D1-backed API: access, inventory, collector isolation, thresholds, stale s
         const backup = (await req("/inventory/export")).body;
         assert.equal(backup.items.length, 2);
         assert(!JSON.stringify(backup).includes(collector.token));
+        assert(!JSON.stringify(backup).includes("rotated-password"));
+        assert.equal(
+          backup.items
+            .find((item: any) => item.project.id === project.id)
+            .checks.find((item: any) => item.id === protectedCheck.id)
+            .credentialId,
+          "",
+        );
         const restored = await req("/inventory/import", "POST", {
           ...backup,
           items: [backup.items.find((i: any) => i.project.id === project.id)],
@@ -332,7 +414,9 @@ test("D1-backed API: access, inventory, collector isolation, thresholds, stale s
         const detail = (await req(`/projects/${restored.body.created[0]}`))
           .body;
         assert.equal(detail.journal[0].body, "Completed the health pipeline.");
-        assert.equal(detail.checks.length, 0);
+        assert.equal(detail.checks.length, 1);
+        assert.equal(detail.checks[0].enabled, false);
+        assert.equal(detail.checks[0].credentialId, "");
       },
     );
   } finally {

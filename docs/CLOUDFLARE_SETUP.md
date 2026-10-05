@@ -48,6 +48,18 @@ Generate the client secret in Cloudflare and store it only as a Worker secret:
 npx wrangler secret put OIDC_CLIENT_SECRET
 ```
 
+Create the monitoring-credential vault key once and keep the same value for the
+life of the vault:
+
+```sh
+openssl rand -base64 32 | npx wrangler secret put CREDENTIAL_ENCRYPTION_KEY --profile opsglass
+```
+
+This 256-bit key encrypts monitoring credentials with AES-GCM before D1 storage.
+It is not stored in D1 or returned by the API. Replacing or losing it makes
+existing monitoring credentials unreadable; create a new key only for a new
+installation, or after deleting and recreating every stored credential.
+
 Never commit or put the secret in frontend variables. The API independently verifies sign-in using the OIDC signature, issuer, audience, expiry, nonce, PKCE and browser-bound state. It stores only a hash of the opaque eight-hour session credential in D1. Cookies are Secure, HttpOnly and SameSite=Lax. Missing authentication/configuration locks private API routes. The public shell and labelled demo contain no private inventory.
 
 ## Publish
@@ -69,7 +81,7 @@ npm run db:migrate:remote
 npm run deploy
 ```
 
-The root deploy builds and publishes the Worker, then publishes Pages with its `API` service binding. `OIDC_CLIENT_SECRET` must be installed before sign-in can work. If installing a secret before the Worker exists, Wrangler may offer to create it; otherwise install immediately after the first Worker deployment.
+The root deploy builds and publishes the Worker, then publishes Pages with its `API` service binding. `OIDC_CLIENT_SECRET` must be installed before sign-in can work, and `CREDENTIAL_ENCRYPTION_KEY` must be installed before protected checks can store credentials. If installing a secret before the Worker exists, Wrangler may offer to create it; otherwise install immediately after the first Worker deployment.
 
 Check the public health endpoint, an unauthenticated private API request (must be denied), and the full owner sign-in flow. `/api/health` intentionally exposes only service/version metadata. Preview URLs on the Worker are disabled; arbitrary Pages preview hosts are not allowed to start sign-in.
 
@@ -77,8 +89,8 @@ Check the public health endpoint, an unauthenticated private API request (must b
 
 First attach `ops.mdanso.com` under the Pages project's **Custom domains**. Then add this record at GoDaddy:
 
-| Type | Name | Target |
-| --- | --- | --- |
+| Type  | Name  | Target                      |
+| ----- | ----- | --------------------------- |
 | CNAME | `ops` | `opsglass-mdanso.pages.dev` |
 
 Use the actual production Pages hostname returned by Cloudflare if it differs. Do not change nameservers. If an `ops` record exists, review it before replacing it. Wait for Pages to validate DNS and issue its certificate. Creating the CNAME before attaching the domain to Pages can produce an error.
@@ -101,7 +113,16 @@ npx wrangler secret put ALERT_WEBHOOK_URL
 - `AGENT_READ_TOKEN`: a long random secret granting read access to the whole workspace, not project-restricted access.
 - `ALERT_WEBHOOK_URL`: optional owner-chosen HTTPS destination for best-effort incident-open notifications. No durable retries or recovery notifications yet. Leave unset until notifications are wanted.
 
-Secrets never appear in API responses. Collector credentials are hashed in D1 and shown only at registration.
+Monitoring credentials never appear in browser, collaborator, agent, or export
+responses. A local collector receives only the temporary authentication headers
+for its own leased check over its authenticated HTTPS heartbeat. Collector
+credentials are hashed in D1 and shown only at registration.
+
+Monitoring credentials are managed under **Connections**. Basic Auth passwords,
+bearer tokens, and Cloudflare Access service tokens are encrypted in D1 and
+referenced by ID from HTTP checks. Values are never displayed after saving,
+included in inventory/context exports, sent to collaborators, or written to
+probe messages. A credential cannot be deleted while a check references it.
 
 ## Share a project
 
